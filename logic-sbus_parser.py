@@ -10,6 +10,8 @@ import os,sys
 import csv
 import time
 import logging
+from struct import unpack
+
 import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
@@ -17,6 +19,17 @@ import matplotlib.pylab as plt
 
 file = r"sbus_t14s5_five_axis.log"
 #file = r"C:\Users\xkadj\OneDrive\PROJEKTY\Projekt_ROBOTIKA\drone\logic\jetson.txt"
+file = r"C:\Users\xkadj\OneDrive\PROJEKTY\Projekt_ROBOTIKA\drone\logic\recive_back.txt"
+
+
+def set_logging():
+    logfile = os.path.join('.', "serial_stream.log")
+    logcfg = {
+        'format'  : '%(asctime)s %(levelname)s: %(message)s',
+        'level'   : logging.DEBUG,
+        'filename': logfile}
+    logging.basicConfig(**logcfg)
+
 def split_messages_by_prefix(raw):
     messages_list,message = [],[]
     for byte in raw.value:
@@ -90,44 +103,44 @@ axes['time_diff'] = axes.time.diff()
 #Bit 0 - 3: n/a
 #Byte[24]: SBUS End Byte, 0x00
 
+set_logging()
 
-logfile = os.path.join('.', "serial_stream.log")
-logcfg = {
-    'format'  : '%(asctime)s %(levelname)s: %(message)s',
-    'level'   : logging.DEBUG,
-    'filename': logfile
-}
-logging.basicConfig(**logcfg)
+def save_stream(time_diff_messages_df_dropna):
+    f = open('record_binary.log', 'w+b')
+    for i,message in time_diff_messages_df_dropna.drop(columns='time').iterrows():
+        message = bytes(list(message.astype(np.uint8)))
+    #    print(message)
+        f.write(message)
+    #    time.sleep(0.015)
+    #    logging.info("sent msg: " + str(message))
+    f.close()
 
-for i,message in time_diff_messages_df_dropna.drop(columns='time').iterrows():
-    message = bytes(list(message.astype(np.uint8)))
-    print(message)
-    time.sleep(0.015)
-    logging.info("sent msg: " + str(message))
+save_stream(time_diff_messages_df_dropna)
 
 
-#
-#
+
+
 ## =============================================================================
-#plt.figure(figsize=[20, 4], dpi=100, facecolor='w', edgecolor='r').set_facecolor('whitesmoke')
-#plt.plot(axes.time,axes[4],'.',label='4')
-#plt.plot(axes.time,axes[5],'.',label='5')
-#plt.plot(axes.time,axes[6],'.',label='6')
-#plt.plot(axes.time,axes[7],'.',label='7')
-#plt.plot(axes.time,axes[3],'.',label='3')
-#plt.plot(axes.time,axes.prelast,'.',label='3')
-#plt.plot(axes.time,axes.lastx,'.',label='3')
-#plt.legend(["axe 4","axe 5", "axe 6", "axe 7", "mode axe","prelast","last"], loc ="lower right")
-#plt.title('SBUS: axe values', size=12, loc='left')
-#plt.xlabel('time[s]',size=10)
-#plt.ylabel('axe value [-]',size=10)
-#
-#plt.minorticks_on()
-#plt.tick_params(axis='both',which='major',length=10,width=1,labelsize=6)
-#plt.style.use('seaborn-paper')
-#plt.grid(True)
-#plt.tight_layout()
-#
-#
-##plt.plot(raw['Time [s]'],raw['value'],'.')
-##plt.plot(raw['Time [s]'],raw['time_diff'],'.')
+plt.figure(figsize=[20, 4], dpi=100, facecolor='w', edgecolor='r').set_facecolor('whitesmoke')
+plt.plot(axes.time,axes[4],'.',label='4')
+plt.plot(axes.time,axes[5],'.',label='5')
+plt.plot(axes.time,axes[6],'.',label='6')
+plt.plot(axes.time,axes[7],'.',label='7')
+plt.plot(axes.time,axes[3],'.',label='3')
+plt.plot(axes.time,axes.prelast,'.',label='3')
+plt.plot(axes.time,axes.lastx,'.',label='3')
+plt.plot(axes.time,axes.time_diff,'.',label='3')
+plt.legend(["axe 4","axe 5", "axe 6", "axe 7", "mode axe","prelast","last","time_diff"], loc ="lower right")
+plt.title('SBUS: axe values', size=12, loc='left')
+plt.xlabel('time[s]',size=10)
+plt.ylabel('axe value [-]',size=10)
+
+plt.minorticks_on()
+plt.tick_params(axis='both',which='major',length=10,width=1,labelsize=6)
+plt.style.use('seaborn-paper')
+plt.grid(True)
+plt.tight_layout()
+
+
+#plt.plot(raw['Time [s]'],raw['value'],'.')
+#plt.plot(raw['Time [s]'],raw['time_diff'],'.')
