@@ -27,9 +27,7 @@ def load_stream():
         stream = f.read()
         return [b'\x0f' + x for x in stream.split(b'\x0f')][1:]
 
-
 serial_port = serial.Serial(
- # set on: inverted logic, baud rate of 100000, 8 data bits, even parity bit, and 2 stop bits
     port="/dev/ttyTHS1",
     baudrate=100000,
     bytesize=serial.EIGHTBITS,
@@ -37,41 +35,19 @@ serial_port = serial.Serial(
     stopbits=serial.STOPBITS_TWO,
 )
 
-# Wait a second to let the port initialize
-time.sleep(1)
-
+time.sleep(1) # Wait a second to let the port initialize
 set_logging()
-
 messages_list = load_stream()
 
 try:
     # Send a simple header
-
     print("start")
     for message in messages_list:
-#        message = b'\x0f\x04$\xa0\xbc\x08\x08@\x00\x02\x10\x80\x00\x04 \x00\x01\x08@\x00\x02\x10\x80\x00$'
         serial_port.write(message)
         print("sent:", message)
         logging.info("sent msg: " + str(message))
         time.sleep(0.0147)
-#    serial_port.write("some_string\r\n".encode())
     print("end")
-
-
-#    while True:
-#        if serial_port.inWaiting() > 0:
-#            data = serial_port.read()
-#            print(data)
-#            serial_port.write(data)
-#            # if we get a carriage return, add a line feed too
-#            # \r is a carriage return; \n is a line feed
-#            # This is to help the tty program on the other end
-#            # Windows is \r\n for carriage return, line feed
-#            # Macintosh and Linux use \n
-#            if data == "\r".encode():
-#                # For Windows boxen on the other end
-#                serial_port.write("\n".encode())
-
 
 except KeyboardInterrupt:
     print("Exiting Program")

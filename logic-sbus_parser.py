@@ -16,11 +16,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pylab as plt
 
-
 file = r"sbus_t14s5_five_axis.log"
-#file = r"C:\Users\xkadj\OneDrive\PROJEKTY\Projekt_ROBOTIKA\drone\logic\jetson.txt"
-file = r"C:\Users\xkadj\OneDrive\PROJEKTY\Projekt_ROBOTIKA\drone\logic\recive_back.txt"
-
 
 def set_logging():
     logfile = os.path.join('.', "serial_stream.log")
@@ -74,6 +70,13 @@ def unpack(data, bitlen):
             n >>= bitlen
         yield from reversed(a)
 
+def save_stream(time_diff_messages_df_dropna):
+    f = open('record_binary.log', 'w+b')
+    for i,message in time_diff_messages_df_dropna.drop(columns='time').iterrows():
+        message = bytes(list(message.astype(np.uint8)))
+        f.write(message)
+    #    logging.info("sent msg: " + str(message))
+    f.close()
 # =============================================================================
 
 raw = pd.read_csv(file, engine='python', quoting=csv.QUOTE_NONE)
@@ -88,13 +91,13 @@ prefix_messages_df = pd.DataFrame(prefix_messages_list)
 time_diff_messages_df = pd.DataFrame(time_diff_messages_list)
 time_diff_messages_df['time'] = pd.Series(times)
 
-
 time_diff_messages_df_dropna = time_diff_messages_df.dropna()
 
 axes = get_axes(time_diff_messages_df_dropna)
 axes['prelast'] = time_diff_messages_df_dropna.reset_index()[23]
 axes['lastx'] = time_diff_messages_df_dropna.reset_index()[24]
 axes['time_diff'] = axes.time.diff()
+
 #Byte[23]:
 #Bit 7: digital channel 17 (0x80)
 #Bit 6: digital channel 18 (0x40)
@@ -105,20 +108,7 @@ axes['time_diff'] = axes.time.diff()
 
 set_logging()
 
-def save_stream(time_diff_messages_df_dropna):
-    f = open('record_binary.log', 'w+b')
-    for i,message in time_diff_messages_df_dropna.drop(columns='time').iterrows():
-        message = bytes(list(message.astype(np.uint8)))
-    #    print(message)
-        f.write(message)
-    #    time.sleep(0.015)
-    #    logging.info("sent msg: " + str(message))
-    f.close()
-
 save_stream(time_diff_messages_df_dropna)
-
-
-
 
 ## =============================================================================
 plt.figure(figsize=[20, 4], dpi=100, facecolor='w', edgecolor='r').set_facecolor('whitesmoke')
@@ -140,6 +130,7 @@ plt.tick_params(axis='both',which='major',length=10,width=1,labelsize=6)
 plt.style.use('seaborn-paper')
 plt.grid(True)
 plt.tight_layout()
+plt.show()
 
 
 #plt.plot(raw['Time [s]'],raw['value'],'.')
